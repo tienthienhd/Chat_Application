@@ -92,6 +92,7 @@ void Server::Bind(void)
 		cerr << "bind failed with error: " << WSAGetLastError() << endl;
 		freeaddrinfo(result);
 		closesocket(ListenSocket);
+		this->~Server();
 		exit(1) ;
 	}
 
