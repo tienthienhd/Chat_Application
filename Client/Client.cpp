@@ -24,13 +24,13 @@ int main(int argc, char **argv)
 	if (argc != 2) {
 		argv[1] = "localhost";
 	}
-	
+
 	Client myClient(argv[1]);
 
 	myClient.Connect();
 
 	system("cls");
-	cout<< "Connecting is success"<< endl;
+	cout << "Connecting is success" << endl;
 
 	HANDLE h[2];
 	h[0] = myClient.Send();
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-Client::Client(const char* IP_ADDRESS):ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL)
+Client::Client(const char* IP_ADDRESS) :ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL)
 {
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
@@ -60,15 +60,10 @@ Client::Client(const char* IP_ADDRESS):ConnectSocket(INVALID_SOCKET), result(NUL
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-
-	// Attempt to connect to the first address returned by
-	// the call to getaddrinfo
-	ptr = result;
-
 	// Resolve the server address and port
 	iResult = getaddrinfo(IP_ADDRESS, DEFAULT_PORT, &hints, &result);
 	if (iResult != 0) {
-		cerr<< "getaddrinfo failed with error: "<< iResult<< endl;
+		cerr << "getaddrinfo failed with error: " << iResult << endl;
 		this->~Client();
 		exit(1);
 	}
@@ -86,7 +81,7 @@ void Client::Connect() {
 		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
 		if (ConnectSocket == INVALID_SOCKET) {
-			cerr<<"socket failed with error: "<< WSAGetLastError();
+			cerr << "socket failed with error: " << WSAGetLastError();
 			this->~Client();
 			exit(1);
 		}
@@ -94,6 +89,7 @@ void Client::Connect() {
 		// Connect to server.
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
+			closesocket(ConnectSocket);
 			ConnectSocket = INVALID_SOCKET;
 			continue;
 		}
@@ -101,6 +97,12 @@ void Client::Connect() {
 	}
 
 	freeaddrinfo(result);
+
+	if (ConnectSocket == INVALID_SOCKET) {
+		cerr << "Unable to connect to server!\n";
+		this->~Client();
+		exit(1);
+	}
 }
 
 void SendData(Client *myClient)
@@ -118,7 +120,7 @@ void SendData(Client *myClient)
 	do {
 		// Send an initial buffer
 		cin.getline(sendbuf, DEFAULT_BUFLEN);
-		
+
 		myClient->iResult = send(myClient->ConnectSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 		if (myClient->iResult == SOCKET_ERROR) {
 			cerr << "send failed with error: " << WSAGetLastError() << endl;
@@ -160,11 +162,11 @@ void ReceiveData(Client *myClient)
 		if (myClient->iResult > 0)
 		{
 			cout << "->\t\t" << recvbuf << endl;
-		}	
+		}
 		else if (myClient->iResult == 0)
 		{
 			cout << "Connection closed\n";
-		}	
+		}
 		else
 		{
 			cerr << "recv failed with error: " << WSAGetLastError() << endl;
