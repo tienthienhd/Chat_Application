@@ -146,6 +146,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Graphic.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <ItemGroup>

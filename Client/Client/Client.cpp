@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cstring>
+#include "Graphic.h"
 #include "Client.h"
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -19,19 +20,34 @@
 
 using namespace std;
 
+int PositionLine = 3;
+
 int main(int argc, char **argv)
 {
+	SetConsoleTitle("Client");
+
 	Client myClient;
-	
+
 	if (argc == 2) {
 		myClient.GetIPServer(argv[1]);
 	}
 
 	myClient.Connect();
-
+	cout << "Connecting is success" << endl;
+	Sleep(1000);
 	system("cls");
-	cout<< "Connecting is success"<< endl;
-
+	char hostname[256];
+	if (gethostname(hostname, 256)) {
+		cout << "Get hostname failed" << endl;
+	}
+	else {
+		int LenHostname = strlen(hostname);
+		gotoxy(40 - LenHostname / 2, 0);
+		textcolor(GREEN);
+		cout << hostname << endl;
+	}
+	
+	
 	myClient.SendAndReceive();
 	cout << "Connection closing...\n";
 
@@ -39,10 +55,10 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-Client::Client(void):ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP_ADDRESS("localhost")
+Client::Client(void) :ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP_ADDRESS("localhost")
 {
 	DEBUG_CONSTRUCTOR
-	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (iResult != 0) {
 		cerr << "WSAStartup failed with error: " << iResult << endl;
@@ -59,7 +75,7 @@ Client::Client(void):ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP_
 Client::~Client(void)
 {
 	DEBUG_DESTRUCTOR
-	closesocket(ConnectSocket);
+		closesocket(ConnectSocket);
 	WSACleanup();
 }
 
@@ -77,12 +93,12 @@ void Client::Connect() {
 		exit(1);
 	}
 
-	for (ptr = result; ptr != NULL;ptr = ptr->ai_next) {
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
 		// Create a SOCKET for connecting to server
 		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
 		if (ConnectSocket == INVALID_SOCKET) {
-			cerr<<"socket failed with error: "<< WSAGetLastError();
+			cerr << "socket failed with error: " << WSAGetLastError();
 			this->~Client();
 			exit(1);
 		}
@@ -100,7 +116,7 @@ void Client::Connect() {
 	freeaddrinfo(result);
 
 	if (ConnectSocket == INVALID_SOCKET) {
-		cerr<< "Unable to connect to server!\n";
+		cerr << "Unable to connect to server!\n";
 		this->~Client();
 		exit(1);
 	}
@@ -110,6 +126,7 @@ void SendData(Client *myClient)
 {
 	char sendbuf[DEFAULT_BUFLEN] = NAME_CLIENT;
 
+	// Send an initial buffer
 	myClient->iResult = send(myClient->ConnectSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 
 	if (myClient->iResult == SOCKET_ERROR) {
@@ -118,10 +135,43 @@ void SendData(Client *myClient)
 		exit(1);
 	}
 
-	do {
-		// Send an initial buffer
-		cin.getline(sendbuf, DEFAULT_BUFLEN);
+	
+	do {// send text
 		
+		// get data
+		if (PositionLine < 20) {
+			gotoxy(0, 22);
+			textbackground(WHITE);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			gotoxy(0, 22);
+			cin.getline(sendbuf, DEFAULT_BUFLEN);
+		}
+		else {
+			gotoxy(0, 2 + PositionLine);
+			textbackground(BLACK);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			cout << "                                                                                 ";
+			gotoxy(0, PositionLine + 5);
+			textbackground(WHITE);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			gotoxy(0, PositionLine + 5);
+			cin.getline(sendbuf, DEFAULT_BUFLEN);
+		}
+		
+		// print data to screen
+		textbackground(BLUE);
+		textcolor(WHITE);
+		gotoxy(70 - strlen(sendbuf), ++PositionLine);
+		cout << sendbuf;
+
+
+
 		myClient->iResult = send(myClient->ConnectSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 		if (myClient->iResult == SOCKET_ERROR) {
 			cerr << "send failed with error: " << WSAGetLastError() << endl;
@@ -166,8 +216,36 @@ void ReceiveData(Client *myClient)
 
 		if (myClient->iResult > 0)
 		{
-			cout << "->\t\t" << recvbuf << endl;
-		}	
+			textbackground(LIGHTGRAY);
+			textcolor(BLACK);
+			gotoxy(0, ++PositionLine);
+			cout << recvbuf;
+
+			// back to edit
+			if (PositionLine < 20) {
+				gotoxy(0, 22);
+				textbackground(WHITE);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				gotoxy(0, 22);
+			}
+			else {
+				gotoxy(0, 2 + PositionLine);
+				textbackground(BLACK);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				cout << "                                                                                 ";
+				gotoxy(0, PositionLine + 5);
+				textbackground(WHITE);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				gotoxy(0, PositionLine + 5);
+			}
+			//cout << "->\t\t" << recvbuf << endl;
+		}
 		else if (myClient->iResult < 0)
 		{
 			cerr << "recv failed with error: " << WSAGetLastError() << endl;

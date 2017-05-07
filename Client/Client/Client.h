@@ -1,12 +1,12 @@
-
+#pragma once
 //#define NDEBUG
 
 #ifndef NDEBUG
-	#define DEBUG_DESTRUCTOR cout << "Destructor." << endl;
-	#define DEBUG_CONSTRUCTOR cout << "Constructor." << endl;
+#define DEBUG_DESTRUCTOR cout << "Destructor." << endl;
+#define DEBUG_CONSTRUCTOR cout << "Constructor." << endl;
 #else
-	#define DEBUG_DESTRUCTOR
-	#define DEBUG_CONSTRUCTOR
+#define DEBUG_DESTRUCTOR
+#define DEBUG_CONSTRUCTOR
 #endif
 
 class Client
@@ -28,4 +28,4 @@ public:
 	void SendAndReceive(void);
 
 	void CloseConnect(void);
-};
+}; 

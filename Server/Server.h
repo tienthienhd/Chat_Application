@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <winsock2.h>
-//#define NDEBUG
+#define NDEBUG
  
 #ifndef NDEBUG
 	#define DEBUG_DESTRUCTOR cout << "Destructor." << endl;

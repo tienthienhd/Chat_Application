@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include "Server.h"
+#include "Graphic.h"
 
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
@@ -19,15 +20,44 @@
 
 using namespace std;
 
+int PositionLine = 3;
+
 int main()
 {
+	SetConsoleTitle("Server");
 	Server myServer;
 
 	myServer.Bind();
 	myServer.Listen();
+
+	// display hostname
+	textcolor(GREEN);
 	cout << "Start server success" << endl;
+	hostent *MyPC;
+	char hostname[256];
+	gethostname(hostname, 256);
+	MyPC = gethostbyname(hostname);
+	cout << "Name of my PC is: " << MyPC->h_name << endl;
+	cout << "IP address of my PC is: " << inet_ntoa(*(in_addr*)MyPC->h_addr_list[0]) << endl;
+
+	/*if (iResult != 0) {
+		textcolor(RED);
+		cout << "Get hostname failed" << endl;
+	}
+	else {
+		cout << "host name is: " << hostname << endl;
+	}*/
 	cout << "Waiting for connecting..." << endl;
+	//=====================================
+	
 	myServer.Accept();
+
+	// display
+	clrscr();
+	int LenHostname = strlen(hostname);
+	gotoxy(40 - LenHostname/2, 0);
+	cout << hostname << endl;
+	 
 
 	myServer.SendAndReceive();
 	cout << "Connection closing..." << endl;
@@ -121,11 +151,42 @@ void Server::Accept(void)
 
 void SendData(Server *myServer)
 {
+	int line = 5;
 	char sendbuf[DEFAULT_BUFLEN];
 	do {
 		// Send an initial buffer
-		cin.getline(sendbuf, DEFAULT_BUFLEN);
-		
+		// get data
+		if (PositionLine < 20) {
+			gotoxy(0, 22);
+			textbackground(WHITE);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			gotoxy(0, 22);
+			cin.getline(sendbuf, DEFAULT_BUFLEN);
+		}
+		else {
+			gotoxy(0, 2 + PositionLine);
+			textbackground(BLACK);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			cout << "                                                                                 ";
+			gotoxy(0, PositionLine + 5);
+			textbackground(WHITE);
+			textcolor(BLACK);
+			cout << "                                                                               ";
+			cout << "                                                                                 ";
+			gotoxy(0, PositionLine + 5);
+			cin.getline(sendbuf, DEFAULT_BUFLEN);
+		}
+
+		// print data to screen
+		textbackground(BLUE);
+		textcolor(WHITE);
+		gotoxy(70 - strlen(sendbuf), ++PositionLine);
+		cout << sendbuf;
+
 		myServer->iResult = send(myServer->ClientSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 		if (myServer->iResult == SOCKET_ERROR) {
 			cerr << "send failed with error: " << WSAGetLastError() << endl;
@@ -147,7 +208,11 @@ void ReceiveData(Server *myServer)
 	myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);
 	
 	if (myServer->iResult > 0) {
+		/*gotoxy(2, 0);
+		Sleep(1000);
 		cout << recvbuf << " is connected."<< endl;
+		Sleep(1000);
+		gotoxy(0, 23)*/;
 	}
 	else
 	{
@@ -165,7 +230,36 @@ void ReceiveData(Server *myServer)
 		}
 
 		if (myServer->iResult > 0) {
-			cout<<"->\t\t"<<recvbuf<<endl;
+
+			textbackground(LIGHTGRAY);
+			textcolor(BLACK);
+			gotoxy(0, ++PositionLine);
+			cout << recvbuf;
+
+			// back to edit
+			if (PositionLine < 20) {
+				gotoxy(0, 22);
+				textbackground(WHITE);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				gotoxy(0, 22);
+			}
+			else {
+				gotoxy(0, 2 + PositionLine);
+				textbackground(BLACK);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				cout << "                                                                                 ";
+				gotoxy(0, PositionLine + 5);
+				textbackground(WHITE);
+				textcolor(BLACK);
+				cout << "                                                                               ";
+				cout << "                                                                                 ";
+				gotoxy(0, PositionLine + 5);
+			}
+			//cout<<"->\t\t"<<recvbuf<<endl;
 		}
 		else if (myServer->iResult < 0) {
 			cerr<< "recv failed: "<< WSAGetLastError()<< endl;
