@@ -4,8 +4,10 @@
  
 #ifndef NDEBUG
 	#define DEBUG_DESTRUCTOR cout << "Destructor." << endl;
+	#define DEBUG_CONSTRUCTOR cout << "Constructor." << endl;
 #else
 	#define DEBUG_DESTRUCTOR
+	#define DEBUG_CONSTRUCTOR
 #endif
 
 class Server
@@ -21,9 +23,10 @@ public:
   	void Bind(void);
   	void Listen(void);
 	void Accept(void);
+
 	friend void ReceiveData(Server *myServer);
-  	HANDLE Receive(void);
-  	friend void SendData(Server *myServer);
-	HANDLE Send(void);
-	void Disconnect(void);
+	friend void SendData(Server *myServer);
+  	void SendAndReceive(void);
+
+	void CloseConnect(void);
 };

@@ -26,25 +26,20 @@ int main()
 	myServer.Bind();
 	myServer.Listen();
 	cout << "Start server success" << endl;
-	cout << "waiting for connecting..." << endl;
+	cout << "Waiting for connecting..." << endl;
 	myServer.Accept();
 
-	HANDLE h[2];
-	h[0] = myServer.Send();
-	h[1] = myServer.Receive();
+	myServer.SendAndReceive();
+	cout << "Connection closing..." << endl;
 
-	WaitForMultipleObjects(2, h, false, INFINITE);
-
-	CloseHandle(h[0]);
-	CloseHandle(h[1]);
-
-	myServer.Disconnect();
+	myServer.CloseConnect();
 
 	return 0;
 }
 
 Server::Server(void) :ListenSocket(INVALID_SOCKET), ClientSocket(NULL), result(NULL)
 {
+	DEBUG_CONSTRUCTOR
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (iResult != 0) {
@@ -144,16 +139,6 @@ void SendData(Server *myServer)
 	} while (1);
 }
 
-HANDLE Server::Send(void)
-{
-	HANDLE h;
-	DWORD id;
-
-	h = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)SendData, this, FALSE, &id);
-
-	return h;
-}
-
 void ReceiveData(Server *myServer)
 {
 	char recvbuf[DEFAULT_BUFLEN];
@@ -175,17 +160,14 @@ void ReceiveData(Server *myServer)
 	do {
 		myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);
 
-		if (strcmp(recvbuf, "###") == 0)
-		{
+		if (strcmp(recvbuf, "###") == 0) {
 			break;
 		}
 
 		if (myServer->iResult > 0) {
 			cout<<"->\t\t"<<recvbuf<<endl;
 		}
-		else if (myServer->iResult == 0)
-			cout<< "Connection closing..."<< endl;
-		else {
+		else if (myServer->iResult < 0) {
 			cerr<< "recv failed: "<< WSAGetLastError()<< endl;
 			closesocket(myServer->ClientSocket);
 			myServer->~Server();
@@ -194,17 +176,21 @@ void ReceiveData(Server *myServer)
 	} while (myServer->iResult > 0);
 }
 
-HANDLE Server::Receive(void)
+void Server::SendAndReceive(void)
 {
-	HANDLE h;
+	HANDLE h[2];
 	DWORD id;
 
-	h = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ReceiveData, this, FALSE, &id);
+	h[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)SendData, this, FALSE, &id);
+	h[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ReceiveData, this, FALSE, &id);
 
-	return h;
+	WaitForMultipleObjects(2, h, false, INFINITE);
+
+	CloseHandle(h[0]);
+	CloseHandle(h[1]);
 }
 
-void Server::Disconnect(void)
+void Server::CloseConnect(void)
 {
 	// shutdown the send half of the connection since no more data will be sent
 	iResult = shutdown(ClientSocket, SD_SEND);
