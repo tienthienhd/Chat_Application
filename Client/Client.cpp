@@ -5,44 +5,31 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdlib.h>
 #include <iostream>
-#include <cstring>
-#include <string>
-#include "Graphic.h"
+#include "..\Server\Graphic.h"
 #include "Client.h"
-#include "TextFormatter.h"
+#include "..\Server\TextFormatter.h"
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-#define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
 #define NAME_CLIENT "Client 1"
 
 using namespace std;
 
-int g_PosOutput = 3;
-int g_PosInput;
-int g_Columns, g_Rows;
+extern int g_PosOutput;
+extern int g_PosInput;
+extern int g_Columns, g_Rows;
 
-void DrawInputPos(void);
-void MoveInputPos(void);
-void PaintLineBackGround(int fromPos, int toPos);
 
 int main(int argc, char **argv)
 {
 	SetConsoleTitle("Client");
 	SetSizeWindow();
-
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    g_Columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    g_Rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-	g_PosInput = g_Rows - 2;
+	GetSizeWindow();
 
 	Client myClient;
 
@@ -60,45 +47,15 @@ int main(int argc, char **argv)
 	}
 	else {
 		int LenHostname = strlen(hostname);
-		gotoxy((g_Columns - LenHostname) / 2, 0);
-		textcolor(GREEN);
+		Gotoxy((g_Columns - LenHostname) / 2, 0);
+		TextColor(GREEN);
 		cout << hostname << endl;
 	}
 
-
 	myClient.SendAndReceive();
-
 	myClient.CloseConnect();
+
 	return 0;
-}
-
-void DrawInputPos(void)
-{
-	gotoxy(0, g_PosInput);
-	textcolor(WHITE);
-	textbackground(BLACK);
-	cout << "->";
-	textbackground(WHITE);
-	textcolor(BLACK);
-	cout << string(g_Columns - 2, ' ');
-	cout << string(g_Columns, ' ');
-	gotoxy(2, g_PosInput);
-}
-
-void MoveInputPos(void)
-{
-	g_PosInput = g_PosOutput + 2;
-	gotoxy(0, g_PosInput - 1);
-	textbackground(BLACK);
-	cout << string(g_Columns, ' ');
-	DrawInputPos();
-}
-
-void PaintLineBackGround(int fromPos, int toPos)
-{
-	gotoxy(fromPos, g_PosOutput);
-	cout << string(toPos - fromPos, ' ');
-	gotoxy(fromPos, g_PosOutput);
 }
 
 Client::Client(void) :ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP_ADDRESS("localhost")
@@ -185,69 +142,14 @@ void SendData(Client *myClient)
 
 	do {
 		// Send an initial buffer
-		numLine = 0;
-		if (g_PosOutput < g_Rows - 3) {
-			DrawInputPos();
-			FormatText(sendbuf, numLine);
-			gotoxy(0, 0);//Can thiet de giu nguyen trang thai man hinh
-		}
-		else {
-			MoveInputPos();
-			FormatText(sendbuf, numLine);
-			gotoxy(0, g_PosInput - g_Rows);//Can thiet de giu nguyen trang thai man hinh
-		}
+		InputSendMessage(numLine, sendbuf);
 
-		if (sendbuf[0] == '\0')
-		{
+		if (sendbuf[0] == '\0') {
 			continue;
 		}
 
 		// print data to screen
-		textbackground(BLUE);
-		textcolor(WHITE);
-		g_PosOutput++;
-		if (g_PosOutput >= g_Rows - 3)
-		{
-			MoveInputPos();
-			textbackground(BLUE);
-			textcolor(WHITE);
-		}
-
-		if (numLine == 1)
-		{
-			gotoxy(g_Columns - strlen(sendbuf), g_PosOutput);
-			cout << sendbuf;
-		}
-		else
-		{
-			PaintLineBackGround(4, g_Columns);
-			char *p = sendbuf;
-			while (*p != '\0')
-			{
-				putchar(*p);
-				if (*p == '\n')
-				{
-					g_PosOutput++;
-					if (g_PosOutput >= g_Rows - 3)
-					{
-						MoveInputPos();
-						textbackground(BLUE);
-						textcolor(WHITE);
-					}
-					PaintLineBackGround(4, g_Columns);
-				}
-				p++;
-			}
-		}
-
-		//Tao khoang trong giua cac tin nhan
-		g_PosOutput++;
-		if (g_PosOutput >= g_Rows - 3)
-		{
-			MoveInputPos();
-			textbackground(BLUE);
-			textcolor(WHITE);
-		}
+		PrintSendMessage(numLine, sendbuf);
 
 		myClient->iResult = send(myClient->ConnectSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 		if (myClient->iResult == SOCKET_ERROR) {
@@ -256,8 +158,7 @@ void SendData(Client *myClient)
 			exit(1);
 		}
 
-		if (strcmp(sendbuf, "###") == 0)
-		{
+		if (strcmp(sendbuf, "###") == 0) {
 			break;
 		}
 	} while (1);
@@ -286,71 +187,15 @@ void ReceiveData(Client *myClient)
 	do {
 		myClient->iResult = recv(myClient->ConnectSocket, recvbuf, recvbuflen, 0);
 
-		if (strcmp(recvbuf, "###") == 0)
-		{
+		if (strcmp(recvbuf, "###") == 0){
 			break;
 		}
 
 		if (myClient->iResult > 0) {
-			textbackground(LIGHTGRAY);
-			textcolor(BLACK);
-			
-			++g_PosOutput;
-
-			if (g_PosOutput >= g_Rows - 3)
-			{
-				MoveInputPos();
-				textbackground(LIGHTGRAY);
-				textcolor(BLACK);
-			}
-
-			gotoxy(0, g_PosOutput);
-
-			if(myClient->iResult < g_Columns - 4)
-			{
-				PaintLineBackGround(0, myClient->iResult);
-			}
-			else
-			{
-				PaintLineBackGround(0, g_Columns - 4);
-			}
-			
-			char *p = recvbuf;
-			while (*p != '\0')
-			{
-				putchar(*p);
-				if (*p == '\n')
-				{
-					g_PosOutput++;
-					if (g_PosOutput >= g_Rows - 3)
-					{
-						MoveInputPos();
-						textbackground(LIGHTGRAY);
-						textcolor(BLACK);
-					}
-					PaintLineBackGround(0, g_Columns - 4);
-				}
-				p++;
-			}
-
-			g_PosOutput = wherey();
-
-			//Tao khoang trong giua cac tin nhan
-			g_PosOutput++;
-			if (g_PosOutput >= g_Rows - 3)
-			{
-				MoveInputPos();
-				textbackground(LIGHTGRAY);
-				textcolor(BLACK);
-			}
+			PrintReceiveMessage(myClient->iResult, recvbuf);
 
 			// back to edit
-			if (g_PosOutput < g_Rows - 3) {
-				DrawInputPos();
-			}
-			else {
-				MoveInputPos();
-			}
+			BackToInputBox();
 		}
 		else if (myClient->iResult < 0)
 		{

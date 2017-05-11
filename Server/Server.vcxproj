@@ -151,7 +151,9 @@
     <ClInclude Include="TextFormatter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Graphic.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="TextFormatter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

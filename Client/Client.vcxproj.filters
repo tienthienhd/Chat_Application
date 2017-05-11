@@ -21,15 +21,21 @@
     <ClCompile Include="Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Server\Graphic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Server\TextFormatter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Graphic.h">
+    <ClInclude Include="..\Server\Graphic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextFormatter.h">
+    <ClInclude Include="..\Server\TextFormatter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

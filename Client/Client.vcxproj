@@ -145,12 +145,14 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Server\Graphic.cpp" />
+    <ClCompile Include="..\Server\TextFormatter.cpp" />
     <ClCompile Include="Client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Server\Graphic.h" />
+    <ClInclude Include="..\Server\TextFormatter.h" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="Graphic.h" />
-    <ClInclude Include="TextFormatter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

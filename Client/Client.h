@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CLIENT_H
+#define CLIENT_H
+
 //#define NDEBUG
 
 #ifndef NDEBUG
@@ -28,4 +30,6 @@ public:
 	void SendAndReceive(void);
 
 	void CloseConnect(void);
-}; 
+};
+
+#endif // !CLIENT_H
