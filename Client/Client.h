@@ -19,6 +19,7 @@ private:
 	WSADATA wsaData;
 	int iResult;
 	char* IP_ADDRESS;
+	FILE *log;
 public:
 	Client(void);
 	~Client(void);

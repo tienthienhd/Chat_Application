@@ -20,6 +20,7 @@ private:
 	struct addrinfo *result, hints;
 	WSADATA wsaData;
 	int iResult;
+	FILE *log;
 public:
 	Server(void);
 	~Server(void);

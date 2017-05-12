@@ -66,6 +66,7 @@ void WaittingScreen(Server &myServer)
 Server::Server(void) :ListenSocket(INVALID_SOCKET), ClientSocket(NULL), result(NULL)
 {
 	DEBUG_CONSTRUCTOR
+	freopen_s(&log, "ServerLog.txt", "a+t", stderr);
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (iResult != 0) {
@@ -101,6 +102,7 @@ Server::Server(void) :ListenSocket(INVALID_SOCKET), ClientSocket(NULL), result(N
 Server::~Server(void)
 {
 	DEBUG_DESTRUCTOR
+	fclose(log);
 	WSACleanup();
 }
 
@@ -177,16 +179,6 @@ void ReceiveData(Server *myServer)
 	char recvbuf[DEFAULT_BUFLEN];
 	int recvbuflen = DEFAULT_BUFLEN;
 
-	myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);
-
-	if (myServer->iResult > 0) {
-	}
-	else {
-		cerr << "recv failed: " << WSAGetLastError() << endl;
-		closesocket(myServer->ClientSocket);
-		myServer->~Server();
-		exit(1);
-	}
 	// Receive until the peer shuts down the connection
 	do {
 		myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);

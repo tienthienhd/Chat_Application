@@ -27,7 +27,7 @@ extern int g_Columns, g_Rows;
 
 int main(int argc, char **argv)
 {
-	SetConsoleTitle("Client");
+	SetConsoleTitle(NAME_CLIENT);
 	SetSizeWindow();
 	GetSizeWindow();
 
@@ -36,10 +36,9 @@ int main(int argc, char **argv)
 	if (argc == 2) {
 		myClient.GetIPServer(argv[1]);
 	}
-
+	TextColor(WHITE);
+	cout << "Waiting for connecting..." << endl;
 	myClient.Connect();
-	cout << "Connecting is success" << endl;
-	Sleep(1000);
 	system("cls");
 	char hostname[256];
 	if (gethostname(hostname, 256)) {
@@ -61,6 +60,8 @@ int main(int argc, char **argv)
 Client::Client(void) :ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP_ADDRESS("localhost")
 {
 	DEBUG_CONSTRUCTOR
+	freopen_s(&log, "ClientLog.txt", "a+t", stderr);
+
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (iResult != 0) {
@@ -78,7 +79,8 @@ Client::Client(void) :ConnectSocket(INVALID_SOCKET), result(NULL), ptr(NULL), IP
 Client::~Client(void)
 {
 	DEBUG_DESTRUCTOR
-		closesocket(ConnectSocket);
+	fclose(log);
+	closesocket(ConnectSocket);
 	WSACleanup();
 }
 
@@ -97,30 +99,42 @@ void Client::Connect() {
 		exit(1);
 	}
 
-	for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
-		// Create a SOCKET for connecting to server
-		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+	int counter = 0;
 
-		if (ConnectSocket == INVALID_SOCKET) {
-			cerr << "socket failed with error: " << WSAGetLastError();
-			this->~Client();
-			exit(1);
+	do {
+		for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+			// Create a SOCKET for connecting to server
+			ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+
+			if (ConnectSocket == INVALID_SOCKET) {
+				cerr << "socket failed with error: " << WSAGetLastError();
+				this->~Client();
+				exit(1);
+			}
+
+			// Connect to server.
+			iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+			if (iResult == SOCKET_ERROR) {
+				closesocket(ConnectSocket);
+				ConnectSocket = INVALID_SOCKET;
+				continue;
+			}
+			counter = 9;
+			break;
 		}
 
-		// Connect to server.
-		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
-		if (iResult == SOCKET_ERROR) {
-			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
-			continue;
-		}
-		break;
-	}
+		counter++;
 
+		if (counter == 10) {
+			break;
+		}
+	} while (1);
+	
 	freeaddrinfo(result);
 
 	if (ConnectSocket == INVALID_SOCKET) {
 		cerr << "Unable to connect to server!\n";
+		system("pause");
 		this->~Client();
 		exit(1);
 	}
@@ -128,17 +142,8 @@ void Client::Connect() {
 
 void SendData(Client *myClient)
 {
-	char sendbuf[DEFAULT_BUFLEN] = NAME_CLIENT;
+	char sendbuf[DEFAULT_BUFLEN];
 	int numLine = 0;
-
-	// Send an initial buffer
-	myClient->iResult = send(myClient->ConnectSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
-
-	if (myClient->iResult == SOCKET_ERROR) {
-		cerr << "send failed with error: " << WSAGetLastError() << endl;
-		myClient->~Client();
-		exit(1);
-	}
 
 	do {
 		// Send an initial buffer
