@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8E9CCFF6-92CB-4647-84EC-42DFCFF7C756}</ProjectGuid>
+    <ProjectGuid>{FB0C532F-7FA0-4B7A-8978-D073E6230E7E}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Server</RootNamespace>
+    <RootNamespace>Client</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -88,7 +88,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>/std:c++14 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,14 +145,14 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Graphic.h" />
-    <ClInclude Include="Server.h" />
-    <ClInclude Include="TextFormatter.h" />
+    <ClCompile Include="..\Server\Graphic.cpp" />
+    <ClCompile Include="..\Server\TextFormatter.cpp" />
+    <ClCompile Include="Client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Graphic.cpp" />
-    <ClCompile Include="Server.cpp" />
-    <ClCompile Include="TextFormatter.cpp" />
+    <ClInclude Include="..\Server\Graphic.h" />
+    <ClInclude Include="..\Server\TextFormatter.h" />
+    <ClInclude Include="Client.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

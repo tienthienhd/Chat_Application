@@ -6,12 +6,10 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdlib.h>
-#include <cstring>
 #include "Server.h"
 #include "Graphic.h"
+#include "TextFormatter.h"
 
-#define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "27015"
 
 // Need to link with Ws2_32.lib
@@ -20,56 +18,55 @@
 
 using namespace std;
 
-int PositionLine = 3;
+extern int g_PosOutput;
+extern int g_PosInput;
+extern int g_Columns, g_Rows;
 
 int main()
 {
 	SetConsoleTitle("Server");
+
+	SetSizeWindow();
+	GetSizeWindow();
+
 	Server myServer;
 
 	myServer.Bind();
 	myServer.Listen();
+	WaittingScreen(myServer);
+	myServer.SendAndReceive();
+	myServer.CloseConnect();
 
+	return 0;
+}
+
+void WaittingScreen(Server &myServer)
+{
 	// display hostname
-	textcolor(GREEN);
+	TextColor(GREEN);
 	cout << "Start server success" << endl;
 	hostent *MyPC;
 	char hostname[256];
 	gethostname(hostname, 256);
 	MyPC = gethostbyname(hostname);
 	cout << "Name of my PC is: " << MyPC->h_name << endl;
-	cout << "IP address of my PC is: " << inet_ntoa(*(in_addr*)MyPC->h_addr_list[0]) << endl;
-
-	/*if (iResult != 0) {
-		textcolor(RED);
-		cout << "Get hostname failed" << endl;
-	}
-	else {
-		cout << "host name is: " << hostname << endl;
-	}*/
+	cout << "IP address of my PC is: \n" << inet_ntoa(*(in_addr*)MyPC->h_addr_list[0]) << endl;
 	cout << "Waiting for connecting..." << endl;
-	//=====================================
-	
+
 	myServer.Accept();
 
 	// display
-	clrscr();
+	system("cls");
 	int LenHostname = strlen(hostname);
-	gotoxy(40 - LenHostname/2, 0);
+	Gotoxy((g_Columns - LenHostname)/2, 0);
 	cout << hostname << endl;
-	 
-
-	myServer.SendAndReceive();
-	cout << "Connection closing..." << endl;
-
-	myServer.CloseConnect();
-
-	return 0;
+	TextColor(WHITE);
 }
 
 Server::Server(void) :ListenSocket(INVALID_SOCKET), ClientSocket(NULL), result(NULL)
 {
 	DEBUG_CONSTRUCTOR
+	freopen_s(&log, "ServerLog.txt", "a+t", stderr);
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (iResult != 0) {
@@ -105,6 +102,7 @@ Server::Server(void) :ListenSocket(INVALID_SOCKET), ClientSocket(NULL), result(N
 Server::~Server(void)
 {
 	DEBUG_DESTRUCTOR
+	fclose(log);
 	WSACleanup();
 }
 
@@ -153,48 +151,24 @@ void SendData(Server *myServer)
 {
 	int line = 5;
 	char sendbuf[DEFAULT_BUFLEN];
+	int numLine = 0;//Dem so dong cua doan van ban gui di
 	do {
 		// Send an initial buffer
-		// get data
-		if (PositionLine < 20) {
-			gotoxy(0, 22);
-			textbackground(WHITE);
-			textcolor(BLACK);
-			cout << "                                                                               ";
-			cout << "                                                                                 ";
-			gotoxy(0, 22);
-			cin.getline(sendbuf, DEFAULT_BUFLEN);
-		}
-		else {
-			gotoxy(0, 2 + PositionLine);
-			textbackground(BLACK);
-			textcolor(BLACK);
-			cout << "                                                                               ";
-			cout << "                                                                                 ";
-			cout << "                                                                                 ";
-			gotoxy(0, PositionLine + 5);
-			textbackground(WHITE);
-			textcolor(BLACK);
-			cout << "                                                                               ";
-			cout << "                                                                                 ";
-			gotoxy(0, PositionLine + 5);
-			cin.getline(sendbuf, DEFAULT_BUFLEN);
-		}
+		InputSendMessage(numLine, sendbuf);
 
+		if (sendbuf[0] == '\0') {
+			continue;
+		}
 		// print data to screen
-		textbackground(BLUE);
-		textcolor(WHITE);
-		gotoxy(70 - strlen(sendbuf), ++PositionLine);
-		cout << sendbuf;
-
+		PrintSendMessage(numLine, sendbuf);
+		
 		myServer->iResult = send(myServer->ClientSocket, sendbuf, (int)strlen(sendbuf) + 1, 0);
 		if (myServer->iResult == SOCKET_ERROR) {
 			cerr << "send failed with error: " << WSAGetLastError() << endl;
 			exit(1);
 		}
 
-		if (strcmp(sendbuf, "###") == 0)
-		{
+		if (strcmp(sendbuf, "###") == 0) {
 			break;
 		}
 	} while (1);
@@ -205,22 +179,6 @@ void ReceiveData(Server *myServer)
 	char recvbuf[DEFAULT_BUFLEN];
 	int recvbuflen = DEFAULT_BUFLEN;
 
-	myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);
-	
-	if (myServer->iResult > 0) {
-		/*gotoxy(2, 0);
-		Sleep(1000);
-		cout << recvbuf << " is connected."<< endl;
-		Sleep(1000);
-		gotoxy(0, 23)*/;
-	}
-	else
-	{
-		cerr << "recv failed: " << WSAGetLastError() << endl;
-		closesocket(myServer->ClientSocket);
-		myServer->~Server();
-		exit(1);
-	}
 	// Receive until the peer shuts down the connection
 	do {
 		myServer->iResult = recv(myServer->ClientSocket, recvbuf, recvbuflen, 0);
@@ -230,36 +188,10 @@ void ReceiveData(Server *myServer)
 		}
 
 		if (myServer->iResult > 0) {
-
-			textbackground(LIGHTGRAY);
-			textcolor(BLACK);
-			gotoxy(0, ++PositionLine);
-			cout << recvbuf;
+			PrintReceiveMessage(myServer->iResult, recvbuf);
 
 			// back to edit
-			if (PositionLine < 20) {
-				gotoxy(0, 22);
-				textbackground(WHITE);
-				textcolor(BLACK);
-				cout << "                                                                               ";
-				cout << "                                                                                 ";
-				gotoxy(0, 22);
-			}
-			else {
-				gotoxy(0, 2 + PositionLine);
-				textbackground(BLACK);
-				textcolor(BLACK);
-				cout << "                                                                               ";
-				cout << "                                                                                 ";
-				cout << "                                                                                 ";
-				gotoxy(0, PositionLine + 5);
-				textbackground(WHITE);
-				textcolor(BLACK);
-				cout << "                                                                               ";
-				cout << "                                                                                 ";
-				gotoxy(0, PositionLine + 5);
-			}
-			//cout<<"->\t\t"<<recvbuf<<endl;
+			BackToInputBox();
 		}
 		else if (myServer->iResult < 0) {
 			cerr<< "recv failed: "<< WSAGetLastError()<< endl;
