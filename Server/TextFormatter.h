@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-enum { MAX_WORD_LEN = 20 };
+enum { MAX_WORD_LEN = 28 };
 enum { MAX_LINE_LEN = 29 };
 #define DEFAULT_BUFLEN 0x10240
 

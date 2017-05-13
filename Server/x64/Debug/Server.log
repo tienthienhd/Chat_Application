@@ -1,9 +1,1 @@
-﻿  Server.cpp
-e:\downloads\documents\visual studio 2017\source\chat_application\server\server.cpp(57): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-e:\downloads\documents\visual studio 2017\source\chat_application\server\server.cpp(39): warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
-  c:\program files (x86)\windows kits\10\include\10.0.15063.0\um\winsock2.h(2218): note: see declaration of 'gethostbyname'
-e:\downloads\documents\visual studio 2017\source\chat_application\server\server.cpp(41): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
-  c:\program files (x86)\windows kits\10\include\10.0.15063.0\um\winsock2.h(1848): note: see declaration of 'inet_ntoa'
-e:\downloads\documents\visual studio 2017\source\chat_application\server\server.cpp(187): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
-  Server.vcxproj -> E:\Downloads\Documents\Visual Studio 2017\Source\Chat_Application\Server\x64\Debug\Server.exe
-  Server.vcxproj -> E:\Downloads\Documents\Visual Studio 2017\Source\Chat_Application\Server\x64\Debug\Server.pdb (Partial PDB)
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v140 (Platform Toolset = 'v140') cannot be found. To build using the v140 build tools, please install v140 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution".

@@ -27,6 +27,7 @@ extern int g_Columns, g_Rows;
 
 int main(int argc, char **argv)
 {
+	system("color 0F");
 	SetConsoleTitle(NAME_CLIENT);
 	SetSizeWindow();
 	GetSizeWindow();

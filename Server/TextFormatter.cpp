@@ -26,6 +26,7 @@ int ReadWord(char *word, int &wordLen)
 		{
 			word[pos] = (char)ch;
 			pos++;
+			if (pos == MAX_WORD_LEN) break;
 		}
 		ch = getchar();
 	}
@@ -78,7 +79,7 @@ void FormatText(char *buf, int &numLine)
 			flag = 1;
 		}
 
-		if ((wordLen + 1 + lineLen) > MAX_LINE_LEN)
+		if ((wordLen + 1 + lineLen) > MAX_LINE_LEN && lineLen != 0)
 		{
 			strcat_s(buf, DEFAULT_BUFLEN, line);
 			strcat_s(buf, DEFAULT_BUFLEN, "\n");
